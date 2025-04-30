@@ -1,5 +1,4 @@
 use std::rc::Rc;
-use std::cell::RefCell;
 use crate::parser::AtomOrList;
 use crate::interpreter::env::EnvFrame;
 use crate::interpreter::value::{Value, PredefinedFnKind};
@@ -8,16 +7,15 @@ pub mod value;
 mod env;
 
 pub struct Interpreter {
-    env: Rc<RefCell<EnvFrame>>
+    env: Rc<EnvFrame>
 }
 
 impl Interpreter {
     pub fn new() -> Interpreter {
 
-        let root_env_frame = Rc::new(RefCell::new(EnvFrame::new(None)));
+        let root_env_frame = Rc::new(EnvFrame::new(None));
 
         root_env_frame
-            .borrow_mut()
             .bind(String::from("+"), Value::PredefinedFn(PredefinedFnKind::Add))
             .bind(String::from("-"), Value::PredefinedFn(PredefinedFnKind::Sub))
             .bind(String::from("*"), Value::PredefinedFn(PredefinedFnKind::Mul))
@@ -35,11 +33,10 @@ impl Interpreter {
         self.do_eval(program, &self.env)
     }
 
-    fn do_eval(&self, program: &AtomOrList, env: &Rc<RefCell<EnvFrame>>) -> Value {
+    fn do_eval(&self, program: &AtomOrList, env: &Rc<EnvFrame>) -> Value {
         match program {
             AtomOrList::Symbol(symbol) => 
-                env.borrow()
-                   .resolve(symbol)
+                env.resolve(symbol)
                    .expect(&format!("Failed to resolve symbol '{}'", symbol))
                    .clone(),
 
@@ -58,7 +55,7 @@ impl Interpreter {
 
                         let value = self.do_eval(&items[2], env);
 
-                        env.borrow_mut().bind(id.clone(), value);
+                        env.bind(id.clone(), value);
 
                         return Value::Nil
                     }
@@ -120,8 +117,8 @@ impl Interpreter {
                     captured_env } = lambda_or_fn {
                         return self.do_eval(
                             body, 
-                            &Rc::new(RefCell::new(
-                                Self::build_lambda_env_frame(captured_env, params, args)))
+                            &Rc::new(
+                                Self::build_lambda_env_frame(captured_env, params, args))
                         )
                 }
 
@@ -139,9 +136,9 @@ impl Interpreter {
     }
 
     fn build_lambda_env_frame(
-        captured_env: &Rc<RefCell<EnvFrame>>,  params: &Vec<String>, args: &[Value]
+        captured_env: &Rc<EnvFrame>,  params: &[String], args: &[Value]
     ) -> EnvFrame {
-        let mut env_frame = EnvFrame::new(Some(captured_env));
+        let env_frame = EnvFrame::new(Some(captured_env));
         for i in 0..params.len() {
             env_frame.bind(params[i].clone(), args[i].clone());
         }

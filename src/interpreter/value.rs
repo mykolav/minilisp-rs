@@ -1,5 +1,4 @@
 use std::rc::Rc;
-use std::cell::RefCell;
 use crate::parser::AtomOrList;
 use crate::interpreter::env::EnvFrame;
 
@@ -7,7 +6,7 @@ use crate::interpreter::env::EnvFrame;
 pub enum Value {
     Number(i32),
     Bool(bool),
-    Lambda { body: AtomOrList, params: Vec<String>, captured_env: Rc<RefCell<EnvFrame>> },
+    Lambda { body: AtomOrList, params: Vec<String>, captured_env: Rc<EnvFrame> },
     PredefinedFn(PredefinedFnKind),
     Nil,
 }
